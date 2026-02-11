@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String
+  passwordHash   String    @default("")
+  avatarUrl      String?
+  image          String?
+  emailVerified  DateTime?
+  replyToEmail   String?
+  plan           String    @default("free") // free, member, global, executive
+  credits        Int       @default(3)
+  creditsMax     Int       @default(3)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  planExpiresAt        DateTime?
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  callRequests   CallRequest[]
+  transactions   CreditTransaction[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model CallRequest {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  taskType        String   @default("call") // call, email
+  status          String   @default("pending") // pending, in_progress, completed, failed, cancelled
+  tier            String   @default("simple") // simple, booking, complex
+
+  // Target details
+  businessName    String
+  businessPhone   String
+  businessEmail   String?
+  country         String
+  language        String
+  timezone        String?
+
+  // Call instructions
+  objective       String
+  detailedNotes   String?
+  tonePreference  String   @default("polite") // polite, formal, casual, assertive
+  constraints     String?
+  fallbackOptions String?
+
+  // Cultural context (auto-generated)
+  culturalNotes   String?
+  openingScript   String?
+  callPlan        String?
+
+  // Twilio (calls)
+  twilioCallSid   String?
+  twilioStatus    String?
+
+  // Email fields
+  emailSubject    String?
+  emailBody       String?
+  emailDraft      String?  // GPT-generated draft for user review
+  emailSentAt     DateTime?
+  emailMessageId  String?  // tracking ID from email provider
+
+  // Results
+  transcript      String?
+  summary         String?
+  outcome         String?  // success, partial, failed, callback_needed
+  actionItems     String?
+  recordingUrl    String?
+
+  // Credits
+  creditsUsed     Int      @default(1)
+
+  // Timestamps
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CreditTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Int      // positive = added, negative = used
+  type        String   // subscription, purchase, usage, refund, bonus
+  description String
+  callRequestId String?
+  createdAt   DateTime @default(now())
+}
+
+model SubscriptionPlan {
+  id              String @id @default(uuid())
+  name            String @unique
+  displayName     String
+  price           Int    // in cents
+  creditsPerMonth Int
+  features        String // JSON string of features
+  stripePriceId   String?
+  isActive        Boolean @default(true)
+}
