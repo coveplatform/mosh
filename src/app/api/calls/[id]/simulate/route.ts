@@ -41,7 +41,8 @@ export async function POST(
     // --- REAL CALL MODE ---
     const vapiConfigured =
       process.env.VAPI_API_KEY &&
-      process.env.VAPI_PHONE_NUMBER_ID &&
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_PHONE_NUMBER &&
       !process.env.VAPI_API_KEY.startsWith("your-");
 
     const openaiConfigured =

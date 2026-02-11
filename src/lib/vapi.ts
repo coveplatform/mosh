@@ -14,10 +14,18 @@ export function getVapiApiKey(): string {
   return key;
 }
 
-export function getVapiPhoneNumberId(): string {
-  const id = process.env.VAPI_PHONE_NUMBER_ID;
-  if (!id) throw new Error("VAPI_PHONE_NUMBER_ID is not set — create a phone number in the Vapi dashboard");
-  return id;
+export function getTwilioPhoneConfig(): {
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  number: string;
+} {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const number = process.env.TWILIO_PHONE_NUMBER;
+  if (!sid || !token || !number) {
+    throw new Error("Twilio credentials not set — TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER are required");
+  }
+  return { twilioAccountSid: sid, twilioAuthToken: token, number };
 }
 
 /**
@@ -93,8 +101,8 @@ export async function createVapiCall(params: {
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
   const body = {
-    // Phone number to call from (configured in Vapi dashboard)
-    phoneNumberId: getVapiPhoneNumberId(),
+    // BYO Twilio phone number — Vapi routes the call through your Twilio account
+    phoneNumber: getTwilioPhoneConfig(),
 
     // Customer to call
     customer: {
