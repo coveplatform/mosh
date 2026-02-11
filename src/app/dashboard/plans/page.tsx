@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,7 @@ const plans = [
   },
 ];
 
-export default function PlansPage() {
+function PlansPageInner() {
   const searchParams = useSearchParams();
   const [currentPlan, setCurrentPlan] = useState("free");
   const [loading, setLoading] = useState<string | null>(null);
@@ -323,5 +323,13 @@ export default function PlansPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PlansPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="animate-pulse text-[var(--muted)]">Loading plans...</div></div>}>
+      <PlansPageInner />
+    </Suspense>
   );
 }
