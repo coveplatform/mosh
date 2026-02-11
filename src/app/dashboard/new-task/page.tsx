@@ -258,8 +258,8 @@ export default function NewTaskPage() {
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
             What do you need <span className="gradient-text">Mosh</span> to do?
           </h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-2">
-            Describe your task in plain English. Mosh will figure out the rest.
+          <p className="text-sm text-[var(--muted-foreground)] mt-2 max-w-md mx-auto">
+            Tell Mosh what you need in plain English — book a doctor, reserve a table, dispute a bill. Mosh will call the business in the local language and handle it for you.
           </p>
         </div>
 
@@ -267,29 +267,15 @@ export default function NewTaskPage() {
         <div className="flex-1 flex flex-col gap-5 min-h-0">
           <div className="space-y-4">
             {/* Freeform textarea */}
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                placeholder={EXAMPLES[placeholderIdx]}
-                rows={3}
-                className="w-full px-4 py-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-all resize-none leading-relaxed"
-              />
-            </div>
-
-            {/* Your name — simple inline */}
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-[var(--muted-foreground)] shrink-0">Your name</label>
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="e.g. Sarah Johnson"
-                className="flex-1 px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-all"
-              />
-            </div>
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              placeholder={EXAMPLES[placeholderIdx]}
+              rows={3}
+              className="w-full px-4 py-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-all resize-none leading-relaxed"
+            />
 
             {/* Continue button */}
             <button
@@ -460,6 +446,18 @@ export default function NewTaskPage() {
               <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
+
+          {/* Your name — confirm before sending */}
+          <Card className="space-y-3">
+            <p className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider">Booking under</p>
+            <input
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Your name (used for the booking)"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--background)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-all"
+            />
+          </Card>
 
           {/* Confirm */}
           <Button onClick={handleConfirm} loading={submitting} disabled={!canConfirm} size="lg" className="w-full">

@@ -27,18 +27,16 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are Mosh, an AI assistant that handles tasks for users. A user living in ${country || "Japan"} wants you to help them with a task — either making a phone call or sending an email on their behalf.
-${taskType ? `\nIMPORTANT: The user has explicitly chosen "${taskType}" as their task type. Respect this choice — set suggestedTaskType to "${taskType}" and ask for ${taskType === "email" ? "an email address (not a phone number)" : "a phone number (not an email address)"} if contact info is missing.\n` : ""}
+          content: `You are Mosh, an AI assistant that makes phone calls on behalf of users. A user living in ${country || "Japan"} wants you to call a business for them.
+
 Analyze their request and return a JSON object with:
 
 {
   "summary": "A one-sentence restatement of what they need, in clear language",
-  "suggestedTaskType": "${taskType || "call or email"} — ${taskType ? `use '${taskType}' as the user chose this.` : "suggest 'email' if the request is formal (complaints, applications, inquiries to businesses that likely prefer email) or if the user mentions email. Otherwise suggest 'call'."}",
+  "suggestedTaskType": "call",
   "businessName": "The business/person to contact (or null if not specified)",
   "phoneProvided": true/false,
   "phone": "extracted phone number or null",
-  "emailProvided": true/false,
-  "email": "extracted email address or null",
   "category": "one of: medical, restaurant, maintenance, government, finance, delivery, salon, school, utility, other",
   "details": {
     "extracted": { ... any key details already mentioned (date, time, name, account number, etc.) },
@@ -47,7 +45,7 @@ Analyze their request and return a JSON object with:
         "key": "field_name",
         "question": "A friendly, concise question to ask the user",
         "required": true/false,
-        "type": "text|phone|email|select",
+        "type": "text|phone|select",
         "options": ["option1", "option2"] // only for select type
       }
     ]
@@ -56,15 +54,31 @@ Analyze their request and return a JSON object with:
   "fallbackOptions": ["option1", "option2", "option3"] // suggested fallback choices
 }
 
-RULES:
-- For CALL tasks: always ask for a phone number if not provided — it's required.
-- For EMAIL tasks: always ask for an email address if not provided — it's required.
-- If the business is vague (e.g. "a doctor", "a salon"), ask which specific one OR offer to help find one.
-- For appointments/bookings, ask about flexibility if time was mentioned (e.g. "If 6pm isn't available, should Mosh try a nearby time?").
-- For complaints/disputes, ask for account numbers or reference numbers if relevant.
-- Keep questions SHORT and friendly. Max 3-4 missing fields.
-- Don't ask for things that are obvious or unnecessary.
-- "required" should be true only for contact info (phone/email) and business identity. Other details are nice-to-have.`,
+RULES FOR GENERATING QUESTIONS:
+1. NEVER combine two different questions into one. Each question must ask about ONE thing only.
+   BAD: "Which doctor or clinic would you like to book an appointment with?"
+   GOOD: Two separate fields — one for "Name of the doctor or clinic" and one for "Phone number"
+
+2. ALWAYS ask for the business phone number separately — it is always required. Hint that the user can paste a link to the business website or Google Maps listing.
+   Example question for phone: "Phone number of the business (you can also paste a Google Maps or website link)"
+
+3. If the business name is vague (e.g. "a doctor", "a salon", "a restaurant"), ask for the specific name separately from the phone number.
+   - Business name field: required, type "text"
+   - Phone number field: required, type "phone"
+
+4. Think logically about what information the business will need during the call:
+   - Medical: patient name, preferred date/time, reason for visit
+   - Restaurant: party size, date/time, seating preference
+   - Maintenance: what's broken, urgency, address/unit number
+   - Salon: service type, preferred date/time
+   - General: keep it minimal — only ask what's truly needed
+
+5. For appointments/bookings, ask about date and time as SEPARATE fields if neither was mentioned.
+
+6. Keep questions SHORT and friendly. Max 5 missing fields total.
+7. Don't ask for things that are obvious or unnecessary.
+8. "required" should be true for: phone number, business name (if not provided). Other details are nice-to-have (required: false).
+9. For fallback questions, ask what to do if the primary request can't be fulfilled (e.g. "If this time isn't available, should Mosh try a nearby time?").`,
         },
         {
           role: "user",
