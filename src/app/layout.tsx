@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Mosh — Phone Calls in Any Language",
   description:
     "Book appointments, make reservations, and handle tasks across languages and timezones. Mosh calls the business, speaks the local language, and reports back.",
-  metadataBase: new URL("https://mosh.app"),
+  metadataBase: new URL("https://usemosh.com"),
   openGraph: {
     title: "Mosh — Phone Calls in Any Language",
     description:
